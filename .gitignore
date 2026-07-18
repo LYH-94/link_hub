@@ -1,0 +1,21 @@
+# Secrets
+.env
+*.env
+*.secret
+*.key
+*.properties
+
+# Build output
+target/
+*.class
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# Kilo Code
+.kilo/
