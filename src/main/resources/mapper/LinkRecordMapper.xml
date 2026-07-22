@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lyh.linkhub.mapper.LinkRecordMapper">
+
+    <sql id="linkRecordColumns">
+        lr.id, lr.title, lr.url, lr.status_id,
+        DATE_FORMAT(lr.created_at, '%Y-%m-%d %H:%i:%s') as createdAt,
+        DATE_FORMAT(lr.last_edited_time, '%Y-%m-%d %H:%i:%s') as lastEditedTime,
+        GROUP_CONCAT(t.name ORDER BY t.id SEPARATOR ',') as tag
+    </sql>
+
+    <sql id="linkRecordJoins">
+        FROM link_record lr
+        LEFT JOIN link_record_tag lrt ON lr.id = lrt.link_record_id
+        LEFT JOIN tag t ON lrt.tag_id = t.id
+    </sql>
+
+    <sql id="filterTagWhere">
+        <where>
+            <if test="filterTag != null and filterTag != ''">
+                AND EXISTS (
+                    SELECT 1 FROM link_record_tag lrt2
+                    JOIN tag t2 ON lrt2.tag_id = t2.id
+                    WHERE lrt2.link_record_id = lr.id AND t2.name = #{filterTag}
+                )
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectLinkRecordPage" resultType="com.lyh.linkhub.pojo.LinkRecord">
+        SELECT <include refid="linkRecordColumns"/>
+        <include refid="linkRecordJoins"/>
+        <include refid="filterTagWhere"/>
+        GROUP BY lr.id
+        ORDER BY lr.created_at ${sortDirection}
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countLinkRecord" resultType="long">
+        SELECT COUNT(DISTINCT lr.id)
+        <include refid="linkRecordJoins"/>
+        <include refid="filterTagWhere"/>
+    </select>
+
+    <select id="selectLinkRecordByUrl" resultType="com.lyh.linkhub.pojo.LinkRecord">
+        SELECT id, title, url, status_id,
+            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as createdAt,
+            DATE_FORMAT(last_edited_time, '%Y-%m-%d %H:%i:%s') as lastEditedTime,
+            '' as tag
+        FROM link_record
+        WHERE url_hash = UNHEX(SHA2(#{url}, 256))
+    </select>
+
+    <select id="selectLinkRecordById" resultType="com.lyh.linkhub.pojo.LinkRecord">
+        SELECT id, title, url, status_id,
+            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as createdAt,
+            DATE_FORMAT(last_edited_time, '%Y-%m-%d %H:%i:%s') as lastEditedTime,
+            '' as tag
+        FROM link_record
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insertLinkRecord" parameterType="com.lyh.linkhub.pojo.LinkRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO link_record (title, url, url_hash, status_id)
+        VALUES (#{title}, #{url}, UNHEX(SHA2(#{url}, 256)), #{statusId})
+    </insert>
+
+    <update id="updateLinkRecord" parameterType="com.lyh.linkhub.pojo.LinkRecord">
+        UPDATE link_record
+        SET title = #{title},
+            url = #{url},
+            url_hash = UNHEX(SHA2(#{url}, 256)),
+            status_id = #{statusId}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteLinkRecord">
+        DELETE FROM link_record WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteLinkRecordTags">
+        DELETE FROM link_record_tag WHERE link_record_id = #{linkRecordId}
+    </delete>
+
+    <insert id="insertLinkRecordTag">
+        INSERT INTO link_record_tag (link_record_id, tag_id)
+        VALUES (#{linkRecordId}, #{tagId})
+    </insert>
+
+</mapper>

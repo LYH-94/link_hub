@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkHub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../styles/style.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <header class="app-header d-flex justify-content-between align-items-center">
+            <span class="brand">LinkHub</span>
+            <div class="d-flex gap-2 align-items-center">
+                <button class="btn btn-outline-secondary btn-sm" @click="toggleSort">
+                    {{ sortDirection === 'asc' ? '時間：新→舊' : '時間：舊→新' }}
+                </button>
+                <button type="button" class="btn btn-primary" @click="openAddModal">新增</button>
+            </div>
+        </header>
+
+        <main class="container py-4">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">標籤篩選</span>
+                        <input type="text" class="form-control" v-model="filterTag" placeholder="輸入標籤名稱">
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="isLoading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">載入中...</span>
+                </div>
+            </div>
+
+            <div v-else-if="records.length === 0" class="text-muted text-center py-5">
+                尚無連結記錄
+            </div>
+
+            <div v-else>
+                <div class="link-card card mb-3" v-for="record in records" :key="record.id">
+                    <div class="card-body d-flex justify-content-between align-items-start">
+                        <div class="link-info flex-grow-1">
+                            <a :href="record.url" target="_blank" rel="noopener" class="link-title">{{ record.title }}</a>
+                            <div class="link-meta">{{ formatTime(record.createdAt) }}</div>
+                            <div class="link-tags mt-2">
+                                <span v-for="tag in parseTags(record.tag || '')" :key="tag" class="badge tag-badge me-1">
+                                    {{ tag }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="link-actions">
+                            <button class="btn btn-sm btn-outline-secondary me-2" @click="openEditModal(record)">編輯</button>
+                            <button class="btn btn-sm btn-outline-danger" @click="deleteRecord(record.id)">刪除</button>
+                        </div>
+                    </div>
+                </div>
+
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" :class="{ disabled: currentPage <= 1 }">
+                            <button class="page-link" @click="prevPage" aria-label="Previous">‹</button>
+                        </li>
+                        <li class="page-item" :class="{ active: currentPage === page }" v-for="page in visiblePages" :key="page">
+                            <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+                        </li>
+                        <li class="page-item" :class="{ disabled: currentPage >= totalPages }">
+                            <button class="page-link" @click="nextPage" aria-label="Next">›</button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </main>
+
+        <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addModalLabel">新增連結</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form @submit.prevent="submitAddForm">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="add-title" class="form-label">標題</label>
+                                <input type="text" id="add-title" class="form-control" v-model="form.title" placeholder="輸入標題" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="add-url" class="form-label">URL</label>
+                                <input type="url" id="add-url" class="form-control" v-model="form.url" placeholder="https://example.com" required @blur="onUrlBlur" @paste="onUrlPaste">
+                            </div>
+                            <div class="mb-3">
+                                <label for="add-tags" class="form-label">標籤 (逗號分隔)</label>
+                                <input type="text" id="add-tags" class="form-control" v-model="form.tag" placeholder="工作, 學習">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
+                            <button type="submit" class="btn btn-primary" :disabled="metadataLoading">新增</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">編輯連結</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form @submit.prevent="submitEditForm">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="edit-title" class="form-label">標題</label>
+                                <input type="text" id="edit-title" class="form-control" v-model="form.title" placeholder="輸入標題" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-url" class="form-label">URL</label>
+                                <input type="url" id="edit-url" class="form-control" v-model="form.url" placeholder="https://example.com" required @blur="onUrlBlur" @paste="onUrlPaste">
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-tags" class="form-label">標籤 (逗號分隔)</label>
+                                <input type="text" id="edit-tags" class="form-control" v-model="form.tag" placeholder="工作, 學習">
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-status" class="form-label">閱讀狀態</label>
+                                <select id="edit-status" class="form-select" v-model="form.statusId">
+                                    <option :value="0">未讀</option>
+                                    <option :value="1">閱讀中</option>
+                                    <option :value="2">已讀</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
+                            <button type="submit" class="btn btn-primary" :disabled="metadataLoading">儲存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    records: [],
+                    currentPage: 1,
+                    pageSize: 10,
+                    total: 0,
+                    sortDirection: 'desc',
+                    filterTag: '',
+                    isLoading: false,
+                    isAddModalOpen: false,
+                    isEditModalOpen: false,
+                    form: {
+                        title: '',
+                        url: '',
+                        tag: '',
+                        statusId: 0
+                    },
+                    editingId: null,
+                    metadataLoading: false
+                }
+            },
+            computed: {
+                totalPages() {
+                    return Math.max(1, Math.ceil(this.total / this.pageSize));
+                },
+                visiblePages() {
+                    const pages = [];
+                    const maxVisible = 5;
+                    let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+                    let end = Math.min(this.totalPages, start + maxVisible - 1);
+                    if (end - start + 1 < maxVisible) {
+                        start = Math.max(1, end - maxVisible + 1);
+                    }
+                    for (let i = start; i <= end; i++) {
+                        pages.push(i);
+                    }
+                    return pages;
+                }
+            },
+            watch: {
+                filterTag() {
+                    this.currentPage = 1;
+                    this.fetchRecords();
+                },
+                sortDirection() {
+                    this.currentPage = 1;
+                    this.fetchRecords();
+                }
+            },
+            methods: {
+                async fetchRecords() {
+                    this.isLoading = true;
+                    try {
+                        const params = new URLSearchParams();
+                        if (this.filterTag) params.set('filterTag', this.filterTag);
+                        params.set('sortDirection', this.sortDirection);
+                        params.set('page', this.currentPage);
+                        const response = await fetch(`/linkRecord?${params.toString()}`);
+                        if (!response.ok) throw new Error('Failed to fetch');
+                        const data = await response.json();
+                        this.records = data.records || [];
+                        this.total = data.total || 0;
+                    } catch (e) {
+                        console.error(e);
+                        this.records = [];
+                        this.total = 0;
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+                openAddModal() {
+                    this.form = { title: '', url: '', tag: '', statusId: 0 };
+                    this.editingId = null;
+                    const modal = new bootstrap.Modal(document.getElementById('addModal'));
+                    modal.show();
+                },
+                closeAddModal() {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
+                    if (modal) modal.hide();
+                },
+                async submitAddForm() {
+                    try {
+                        const response = await fetch('/linkRecord', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.form)
+                        });
+                        if (!response.ok) throw new Error('Failed to create');
+                        await this.fetchRecords();
+                        this.closeAddModal();
+                    } catch (e) {
+                        console.error(e);
+                        alert('新增失敗');
+                    }
+                },
+                openEditModal(record) {
+                    this.editingId = record.id;
+                    this.form = {
+                        title: record.title,
+                        url: record.url,
+                        tag: record.tag || '',
+                        statusId: record.statusId || 0
+                    };
+                    const modal = new bootstrap.Modal(document.getElementById('editModal'));
+                    modal.show();
+                },
+                closeEditModal() {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+                    if (modal) modal.hide();
+                },
+                async submitEditForm() {
+                    if (!this.editingId) return;
+                    try {
+                        const response = await fetch(`/linkRecord/${this.editingId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.form)
+                        });
+                        if (!response.ok) throw new Error('Failed to update');
+                        await this.fetchRecords();
+                        this.closeEditModal();
+                        this.editingId = null;
+                    } catch (e) {
+                        console.error(e);
+                        alert('更新失敗');
+                    }
+                },
+                async deleteRecord(id) {
+                    if (!confirm('確定要刪除嗎？')) return;
+                    try {
+                        const response = await fetch(`/linkRecord/${id}`, { method: 'DELETE' });
+                        if (response.status !== 204) throw new Error('Failed to delete');
+                        await this.fetchRecords();
+                    } catch (e) {
+                        console.error(e);
+                        alert('刪除失敗');
+                    }
+                },
+                async fetchUrlMetadata(url) {
+                    if (!url) return;
+                    this.metadataLoading = true;
+                    try {
+                        const response = await fetch('/url/metadata', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: url })
+                        });
+                        if (!response.ok) throw new Error('Failed to fetch metadata');
+                        const data = await response.json();
+                        if (data.title && !this.form.title) {
+                            this.form.title = data.title;
+                        }
+                    } catch (e) {
+                        console.error('Metadata fetch failed:', e);
+                    } finally {
+                        this.metadataLoading = false;
+                    }
+                },
+                onUrlBlur() {
+                    if (this.form.url) {
+                        this.fetchUrlMetadata(this.form.url);
+                    }
+                },
+                async onUrlPaste() {
+                    await this.$nextTick();
+                    if (this.form.url) {
+                        this.fetchUrlMetadata(this.form.url);
+                    }
+                },
+                toggleSort() {
+                    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+                },
+                prevPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                        this.fetchRecords();
+                    }
+                },
+                nextPage() {
+                    if (this.currentPage < this.totalPages) {
+                        this.currentPage++;
+                        this.fetchRecords();
+                    }
+                },
+                goToPage(page) {
+                    if (page !== this.currentPage) {
+                        this.currentPage = page;
+                        this.fetchRecords();
+                    }
+                },
+                formatTime(iso) {
+                    if (!iso) return '';
+                    const d = new Date(iso);
+                    const pad = (n) => String(n).padStart(2, '0');
+                    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                },
+                parseTags(tagCsv) {
+                    if (!tagCsv) return [];
+                    return tagCsv.split(',').map(t => t.trim()).filter(Boolean);
+                }
+            },
+            mounted() {
+                this.fetchRecords();
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

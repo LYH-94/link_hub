@@ -2,7 +2,7 @@ spring:
   application:
     name: linkhub
   datasource:
-    url: jdbc:mysql://localhost:3306/demo_db?serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/linkhub_db?serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: demo
     password: demo123

@@ -1,0 +1,192 @@
+openapi: 3.0.3
+
+info:
+  title: LinkHub API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+
+tags:
+  - name: LinkRecord
+  - name: URL
+
+paths:
+  /pages/linkRecord.html:
+    get:
+      tags:
+        - LinkRecord
+      summary: 訪問 linkRecord 頁面
+      description: 
+        訪問 linkRecord 頁面後，還需要相關的資料，因此在發送 /page/linkRecord.html 請求後，需接著發送 /linkRecord 請求。
+      responses:
+        '200':
+          description: 頁面響應成功
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /linkRecord:
+    get:
+      tags:
+        - LinkRecord
+      summary: 查詢連結記錄
+      parameters:
+        - name: filterTag
+          in: query
+          description: 根據 tag 過濾連結記錄
+          required: false
+          schema:
+            type: string
+        - name: sortDirection
+          in: query
+          description: 基於創建時間的排序方向
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+        - name: page
+          in: query
+          description: 頁碼
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: 查詢連結記錄成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelectLinkRecord'
+		post:
+      tags:
+        - LinkRecord
+      summary: 新增連結記錄
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLinkRecord'
+      responses:
+        '201':
+          description: 新增連結記錄成功
+
+  /linkRecord/{id}:
+    put:
+      tags:
+        - LinkRecord
+      summary: 更新連結記錄
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLinkRecord'
+      responses:
+        '200':
+          description: 更新連結記錄成功
+		delete:
+      tags:
+        - LinkRecord
+      summary: 刪除連結記錄
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        '204':
+          description: 刪除連結記錄成功
+
+  /url/metadata:
+    post:
+      tags:
+        - URL
+      summary: 從 URL 取得元數據
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UrlMetadataRequest'
+      responses:
+        '200':
+          description: 獲取到的 URL 元數據
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlMetadataResponse'
+
+components:
+  schemas:
+    SelectLinkRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        url:
+          type: string
+        tag:
+          type: string
+          example: Spring,Java,MySQL
+        status_id:
+          type: byte
+        created_at:
+	        type: string
+          format: date
+        last_edited_time:
+	        type: string
+          format: date
+		CreateLinkRecord:
+      type: object
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+        tag:
+          type: string
+          example: Spring,Java,MySQL
+		UpdateLinkRecord:
+      type: object
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+        tag:
+          type: string
+          example: Spring,Java,MySQL
+        status_id:
+          type: byte
+		UrlMetadataRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          example: https://spring.io
+		UrlMetadataResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Spring
