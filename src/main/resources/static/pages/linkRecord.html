@@ -21,11 +21,11 @@
 
         <main class="container py-4">
             <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <span class="input-group-text">標籤篩選</span>
-                        <input type="text" class="form-control" v-model="filterTag" placeholder="輸入標籤名稱">
-                    </div>
+                <div class="col-md-4">
+                    <select class="form-select" v-model="filterTag">
+                        <option value="">全部標籤</option>
+                        <option v-for="tag in tags" :key="tag" :value="tag">{{ tag }}</option>
+                    </select>
                 </div>
             </div>
 
@@ -45,10 +45,11 @@
                         <div class="link-info flex-grow-1">
                             <a :href="record.url" target="_blank" rel="noopener" class="link-title">{{ record.title }}</a>
                             <div class="link-meta">{{ formatTime(record.createdAt) }}</div>
-                            <div class="link-tags mt-2">
-                                <span v-for="tag in parseTags(record.tag || '')" :key="tag" class="badge tag-badge me-1">
+                            <div class="mt-2 d-flex gap-2 flex-wrap">
+                                <span v-for="tag in parseTags(record.tag || '')" :key="tag" class="badge tag-badge">
                                     {{ tag }}
                                 </span>
+                                <span class="badge" :class="statusBadgeClass(record.statusId)">{{ statusText(record.statusId) }}</span>
                             </div>
                         </div>
                         <div class="link-actions">
@@ -159,6 +160,7 @@
                     total: 0,
                     sortDirection: 'desc',
                     filterTag: '',
+                    tags: [],
                     isLoading: false,
                     isAddModalOpen: false,
                     isEditModalOpen: false,
@@ -221,6 +223,16 @@
                         this.isLoading = false;
                     }
                 },
+                async fetchTags() {
+                    try {
+                        const response = await fetch('/linkRecord/tags');
+                        if (!response.ok) throw new Error('Failed to fetch tags');
+                        this.tags = await response.json();
+                    } catch (e) {
+                        console.error(e);
+                        this.tags = [];
+                    }
+                },
                 openAddModal() {
                     this.form = { title: '', url: '', tag: '', statusId: 0 };
                     this.editingId = null;
@@ -240,6 +252,7 @@
                         });
                         if (!response.ok) throw new Error('Failed to create');
                         await this.fetchRecords();
+                        await this.fetchTags();
                         this.closeAddModal();
                     } catch (e) {
                         console.error(e);
@@ -271,6 +284,7 @@
                         });
                         if (!response.ok) throw new Error('Failed to update');
                         await this.fetchRecords();
+                        await this.fetchTags();
                         this.closeEditModal();
                         this.editingId = null;
                     } catch (e) {
@@ -347,6 +361,14 @@
                     const pad = (n) => String(n).padStart(2, '0');
                     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
                 },
+                statusText(statusId) {
+                    const map = { 0: '未讀', 1: '閱讀中', 2: '已讀' };
+                    return map[statusId] || '未讀';
+                },
+                statusBadgeClass(statusId) {
+                    const map = { 0: 'bg-secondary', 1: 'bg-warning text-dark', 2: 'bg-success' };
+                    return map[statusId] || 'bg-secondary';
+                },
                 parseTags(tagCsv) {
                     if (!tagCsv) return [];
                     return tagCsv.split(',').map(t => t.trim()).filter(Boolean);
@@ -354,6 +376,7 @@
             },
             mounted() {
                 this.fetchRecords();
+                this.fetchTags();
             }
         }).mount('#app');
     </script>

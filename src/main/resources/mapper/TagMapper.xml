@@ -11,4 +11,8 @@
     <insert id="insertIfNotExists">
         INSERT IGNORE INTO tag (name) VALUES (#{name})
     </insert>
+
+    <select id="selectAll" resultType="java.lang.String">
+        SELECT name FROM tag ORDER BY id
+    </select>
 </mapper>

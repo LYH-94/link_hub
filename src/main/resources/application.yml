@@ -2,10 +2,10 @@ spring:
   application:
     name: linkhub
   datasource:
-    url: jdbc:mysql://localhost:3306/linkhub_db?serverTimezone=UTC
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/linkhub_db?serverTimezone=UTC}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: demo
-    password: demo123
+    username: ${DATABASE_USERNAME:linkhub_user}
+    password: ${DATABASE_PASSWORD:linkhub_user123}
     type: com.zaxxer.hikari.HikariDataSource
 
 mybatis:
