@@ -10,69 +10,6 @@ LinkHub 是一個 URL 連結管理 Web 應用程式，提供連結的增刪改�
 - **時間排序**：支援依建立時間升降序排列
 - **分頁查詢**：每頁顯示 10 筆連結記錄，避免一次查詢過多資料
 
-## 技術堆疊
-
-### 後端
-- Java 17
-- Spring Boot 3.5.3
-- MyBatis 3.5.17
-- MySQL
-- Maven
-
-### 前端
-- HTML5
-- CSS3
-- Bootstrap 5.3.3
-- Vue 3（CDN）
-- Fetch API
-
-## 專案結構
-
-```
-src/main/java/com/lyh/linkhub/
-├── LinkhubApplication.java          # Spring Boot 啟動類別
-├── controller/
-│   ├── LinkRecordController.java    # 連結記錄 REST API
-│   └── UrlMetadataController.java   # URL 元數據 API
-├── service/
-│   ├── LinkRecordService.java       # 連結記錄業務邏輯
-│   └── UrlMetadataService.java      # URL 元數據取得服務
-├── pojo/
-│   ├── LinkRecord.java
-│   ├── LinkRecordPage.java
-│   ├── CreateLinkRecordRequest.java
-│   ├── UpdateLinkRecordRequest.java
-│   ├── UrlMetadataRequest.java
-│   └── UrlMetadataResponse.java
-└── mapper/
-    ├── LinkRecordMapper.java
-    ├── LinkRecordMapper.xml
-    ├── TagMapper.java
-    └── TagMapper.xml
-
-src/main/resources/
-├── application.yml                  # 應用程式設定
-├── mapper/                          # MyBatis XML 映射檔案
-└── static/
-    ├── pages/
-    │   └── linkRecord.html          # 前端主頁面（含內嵌 Vue3 JavaScript）
-    └── styles/
-        └── style.css                # 前端樣式
-
-docs/
-├── database.sql                     # 資料庫結構與種子資料
-└── openapi.yaml                     # API 規格文件
-```
-
-## 資料庫設計
-
-請參考 `docs/database.sql` 建立資料庫與資料表。主要表格包括：
-
-- `link_status`：連結閱讀狀態（未讀、閱讀中、已讀）
-- `link_record`：連結記錄主表
-- `tag`：標籤表
-- `link_record_tag`：連結與標籤關聯表
-
 ## 快速啟動（Docker）
 
 本專案提供 Docker 與 Docker Compose 設定，可一句指令啟動完整環境（包含 MySQL 資料庫與應用程式），無需手動建立資料表結構。
@@ -142,6 +79,69 @@ docker-compose down -v
 http://localhost:8080/pages/linkRecord.html
 ```
 
+## 技術堆疊
+
+### 後端
+- Java 17
+- Spring Boot 3.5.3
+- MyBatis 3.5.17
+- MySQL
+- Maven
+
+### 前端
+- HTML5
+- CSS3
+- Bootstrap 5.3.3
+- Vue 3（CDN）
+- Fetch API
+
+## 專案結構
+
+```
+src/main/java/com/lyh/linkhub/
+├── LinkhubApplication.java          # Spring Boot 啟動類別
+├── controller/
+│   ├── LinkRecordController.java    # 連結記錄 REST API
+│   └── UrlMetadataController.java   # URL 元數據 API
+├── service/
+│   ├── LinkRecordService.java       # 連結記錄業務邏輯
+│   └── UrlMetadataService.java      # URL 元數據取得服務
+├── pojo/
+│   ├── LinkRecord.java
+│   ├── LinkRecordPage.java
+│   ├── CreateLinkRecordRequest.java
+│   ├── UpdateLinkRecordRequest.java
+│   ├── UrlMetadataRequest.java
+│   └── UrlMetadataResponse.java
+└── mapper/
+    ├── LinkRecordMapper.java
+    ├── LinkRecordMapper.xml
+    ├── TagMapper.java
+    └── TagMapper.xml
+
+src/main/resources/
+├── application.yml                  # 應用程式設定
+├── mapper/                          # MyBatis XML 映射檔案
+└── static/
+    ├── pages/
+    │   └── linkRecord.html          # 前端主頁面（含內嵌 Vue3 JavaScript）
+    └── styles/
+        └── style.css                # 前端樣式
+
+docs/
+├── database.sql                     # 資料庫結構與種子資料
+└── openapi.yaml                     # API 規格文件
+```
+
+## 資料庫設計
+
+請參考 `docs/database.sql` 建立資料庫與資料表。主要表格包括：
+
+- `link_status`：連結閱讀狀態（未讀、閱讀中、已讀）
+- `link_record`：連結記錄主表
+- `tag`：標籤表
+- `link_record_tag`：連結與標籤關聯表
+
 ## API 規格
 
 詳細 API 規格請參考 `docs/openapi.yaml`。
@@ -181,6 +181,7 @@ http://localhost:8080/pages/linkRecord.html
 - 前端頁面雛型定義
 - 功能需求定義與規格確認
 - 關鍵實作決策（例如：metadata 使用 `HttpURLConnection`、tag 僅操作關聯表不自動建立等）
+- Docker 容器化部署、volume 配置
 
 #### AI（Kilo / kilo-auto/free）的貢獻
 
@@ -193,5 +194,7 @@ http://localhost:8080/pages/linkRecord.html
 - 前端頁面：
   - 根據雛型定義撰寫前端頁面，內嵌 Vue3（CDN）+ Fetch API
   - 實作 Tag 下拉篩選、閱讀狀態顯示、分頁、排序等功能
-- 程式碼除錯與修正（編譯錯誤、API 規格對齊等）
-- README.md 撰寫
+- Dockerfile 與 docker-compose.yml 撰寫
+- `application.yml` 環境變數化更新
+- 程式碼除錯與修正（編譯錯誤、API 規格對齊、生命週期掛鉤位置錯誤等）
+- README.md 撰寫與章節重新編排
