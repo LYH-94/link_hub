@@ -7,14 +7,6 @@ CREATE DATABASE IF NOT EXISTS linkhub_db
 DEFAULT CHARACTER SET utf8mb4
 COLLATE utf8mb4_0900_ai_ci;
 
--- 建立使用者
-CREATE USER 'linkhub_user'@'%'
-IDENTIFIED BY 'linkhub_user123';
-
-GRANT ALL PRIVILEGES
-ON linkhub_db.*
-TO 'linkhub_user'@'%';
-
 -- 使用資料庫
 USE linkhub_db;
 

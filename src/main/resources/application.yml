@@ -5,7 +5,7 @@ spring:
     url: ${DATABASE_URL:jdbc:mysql://localhost:3306/linkhub_db?serverTimezone=UTC}
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DATABASE_USERNAME:linkhub_user}
-    password: ${DATABASE_PASSWORD:linkhub_user123}
+    password: ${DATABASE_PASSWORD:}
     type: com.zaxxer.hikari.HikariDataSource
 
 mybatis:

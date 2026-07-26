@@ -43,6 +43,17 @@ http://localhost:8080/pages/linkRecord.html
 - MySQL 資料庫資料會持久化儲存在 Docker volume `mysql_data` 中
 - 資料庫連線設定已內建在 `docker-compose.yml`，无需額外修改
 
+### 設定自己的密碼
+
+1. 複製 `.env.example` 為 `.env`（或直接編輯 `.env`）
+2. 修改 `.env` 中的密碼：
+   ```env
+   MYSQL_ROOT_PASSWORD=你的MySQL root密碼
+   DATABASE_USERNAME=你的應用程式資料庫使用者名稱
+   DATABASE_PASSWORD=你的應用程式資料庫密碼
+   ```
+3. `.env` 已列入 `.gitignore`，不會被提交到版本控制
+
 ### 停止與清除
 
 ```bash
@@ -52,6 +63,17 @@ docker-compose down
 # 停止服務並刪除資料庫資料（重新初始化）
 docker-compose down -v
 ```
+
+### 常用指令
+
+| 指令 | 說明 |
+|------|------|
+| `docker-compose up --build` | 建置映像檔並啟動所有服務（首次啟動或更新程式碼後使用） |
+| `docker-compose start` | 啟動已停止的服務（不重建映像檔） |
+| `docker-compose stop` | 停止執行中的服務（保留容器和資料） |
+| `docker-compose restart` | 重新啟動服務 |
+| `docker-compose down` | 停止並移除容器、網路（保留 volume 資料庫資料） |
+| `docker-compose down -v` | 停止並移除容器、網路、volume（一併刪除資料庫資料） |
 
 ## 開始使用（本機開發模式）
 

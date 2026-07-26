@@ -2,8 +2,10 @@ services:
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: linkhub_db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docs/database.sql:/docker-entrypoint-initdb.d/database.sql
@@ -21,9 +23,9 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      DATABASE_URL: jdbc:mysql://mysql:3306/linkhub_db?serverTimezone=UTC
-      DATABASE_USERNAME: linkhub_user
-      DATABASE_PASSWORD: linkhub_user123
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
     ports:
       - "8080:8080"
 
