@@ -227,11 +227,28 @@
                     try {
                         const response = await fetch('/linkRecord/tags');
                         if (!response.ok) throw new Error('Failed to fetch tags');
-                        this.tags = await response.json();
+                        const apiTags = await response.json();
+                        if (apiTags && apiTags.length > 0) {
+                            this.tags = apiTags;
+                        } else {
+                            this.tags = this.getTagsFromRecords();
+                        }
                     } catch (e) {
                         console.error(e);
-                        this.tags = [];
+                        this.tags = this.getTagsFromRecords();
                     }
+                },
+                getTagsFromRecords() {
+                    const tagSet = new Set();
+                    this.records.forEach(r => {
+                        if (r.tag) {
+                            r.tag.split(',').forEach(t => {
+                                const trimmed = t.trim();
+                                if (trimmed) tagSet.add(trimmed);
+                            });
+                        }
+                    });
+                    return Array.from(tagSet);
                 },
                 openAddModal() {
                     this.form = { title: '', url: '', tag: '', statusId: 0 };
@@ -298,6 +315,7 @@
                         const response = await fetch(`/linkRecord/${id}`, { method: 'DELETE' });
                         if (response.status !== 204) throw new Error('Failed to delete');
                         await this.fetchRecords();
+                        await this.fetchTags();
                     } catch (e) {
                         console.error(e);
                         alert('刪除失敗');

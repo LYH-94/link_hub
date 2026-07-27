@@ -13,6 +13,22 @@
     </insert>
 
     <select id="selectAll" resultType="java.lang.String">
-        SELECT name FROM tag ORDER BY id
+        SELECT name FROM tag
+        WHERE id IN (SELECT DISTINCT tag_id FROM link_record_tag)
+        ORDER BY id
     </select>
+
+    <select id="selectUnusedTagIds" resultType="java.lang.Long">
+        SELECT t.id
+        FROM tag t
+        LEFT JOIN link_record_tag lrt ON t.id = lrt.tag_id
+        WHERE lrt.tag_id IS NULL
+    </select>
+
+    <delete id="deleteByIds">
+        DELETE FROM tag WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
 </mapper>

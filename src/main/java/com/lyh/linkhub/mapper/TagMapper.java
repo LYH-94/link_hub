@@ -12,4 +12,8 @@ public interface TagMapper {
     int insertIfNotExists(@Param("name") String name);
 
     List<String> selectAll();
+
+    List<Long> selectUnusedTagIds();
+
+    int deleteByIds(@Param("ids") List<Long> ids);
 }

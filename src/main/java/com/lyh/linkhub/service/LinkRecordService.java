@@ -76,12 +76,15 @@ public class LinkRecordService {
             }
         }
 
+        cleanupUnusedTags();
+
         return getLinkRecordById(id);
     }
 
     public void deleteLinkRecord(Long id) {
         linkRecordMapper.deleteLinkRecordTags(id);
         linkRecordMapper.deleteLinkRecord(id);
+        cleanupUnusedTags();
     }
 
     public LinkRecord findByUrl(String url) {
@@ -105,5 +108,12 @@ public class LinkRecordService {
             }
         }
         return tags;
+    }
+
+    private void cleanupUnusedTags() {
+        List<Long> unusedTagIds = tagMapper.selectUnusedTagIds();
+        if (!unusedTagIds.isEmpty()) {
+            tagMapper.deleteByIds(unusedTagIds);
+        }
     }
 }
