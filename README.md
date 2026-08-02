@@ -1,6 +1,6 @@
 # LinkHub
 <p align="center">
-  <img src="./docs/images/展示頁面.jpg" />
+  <img src="./docs/images/展示頁面.JPG" />
 </p>
 
 [關於](#關於)
