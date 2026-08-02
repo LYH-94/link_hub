@@ -1,7 +1,33 @@
 # LinkHub
+<p align="center">
+  <img src="./docs/images/展示頁面.jpg" />
+</p>
+
+[關於](#關於)
+
+[功能特色](#功能特色)
+
+[快速啟動（Docker）](#quick-start-docker)
+
+[開始使用（本機開發模式）](#get-started-native-development)
+
+[技術堆疊](#技術堆疊)
+
+[專案結構](#專案結構)
+
+[資料庫設計](#資料庫設計)
+
+[API 規格](#api-space)
+
+[AI 輔助開發聲明](#api-assisted-development)
+
+---
+
+## 關於
 
 LinkHub 是一個 URL 連結管理 Web 應用程式，提供連結的增刪改查、標籤過濾、時間排序、分頁查詢，以及貼上 URL 後自動取得網頁標題等功能。
 
+※該專案目前為透過瀏覽器使用的單機應用。
 ## 功能特色
 
 - **連結 CRUD**：新增、編輯、刪除、查詢連結記錄
@@ -10,7 +36,7 @@ LinkHub 是一個 URL 連結管理 Web 應用程式，提供連結的增刪改�
 - **時間排序**：支援依建立時間升降序排列
 - **分頁查詢**：每頁顯示 10 筆連結記錄，避免一次查詢過多資料
 
-## 快速啟動（Docker）
+## <a id="quick-start-docker"></a>快速啟動（Docker）
 
 本專案提供 Docker 與 Docker Compose 設定，可一句指令啟動完整環境（包含 MySQL 資料庫與應用程式），無需手動建立資料表結構。
 
@@ -75,7 +101,7 @@ docker-compose down -v
 | `docker-compose down` | 停止並移除容器、網路（保留 volume 資料庫資料） |
 | `docker-compose down -v` | 停止並移除容器、網路、volume（一併刪除資料庫資料） |
 
-## 開始使用（本機開發模式）
+## <a id="get-started-native-development"></a>開始使用（本機開發模式）
 
 ### 1. 環境需求
 
@@ -164,7 +190,7 @@ docs/
 - `tag`：標籤表
 - `link_record_tag`：連結與標籤關聯表
 
-## API 規格
+## <a id="api-space"></a>API 規格
 
 詳細 API 規格請參考 `docs/openapi.yaml`。
 
@@ -179,7 +205,7 @@ docs/
 | GET | `/linkRecord/tags` | 取得所有標籤列表 |
 | POST | `/url/metadata` | 從 URL 獲取元數據（網頁標題） |
 
-## AI 輔助開發聲明
+## <a id="api-assisted-development"></a>AI 輔助開發聲明
 
 本專案由 **AI 輔助開發** 完成。
 
@@ -220,3 +246,13 @@ docs/
 - `application.yml` 環境變數化更新
 - 程式碼除錯與修正（編譯錯誤、API 規格對齊、生命週期掛鉤位置錯誤等）
 - README.md 撰寫與章節重新編排
+
+### 是否提供 UML 模型對 AI 輔助開發的差異
+
+LinkHub 和 [LinkHub_2](https://github.com/LYH-94/link_hub_2) 的功能相同，差別在於是否將事先設計好的 UML 模型（系統架構圖、循序圖及類別圖）提供給 AI 作為開發依據。
+
+當提供設計好的 UML 模型時，AI 能夠依照既定的規格進行開發，產出的程式碼在整體架構、資料流、模組職責及命名風格上都具有較高的一致性。由於 UML 是依照自己的設計理念規劃，因此後續閱讀、除錯與維護程式時，也能更容易理解各個元件的用途及彼此之間的關係。
+
+相較之下，若沒有提供 UML 模型，AI 會依照自身的理解進行設計。雖然同樣能完成需求，但程式架構、命名方式及資料流未必符合原本的設計想法，因此需要花費更多時間閱讀與理解 AI 的設計思路，後續調整與維護的成本也相對較高。
+
+由於本專案規模較小、業務邏輯也相對單純，因此即使沒有提供 UML 模型，AI 產生的程式碼仍然容易理解。然而，隨著系統規模與複雜度提升，是否事先完成系統設計所帶來的差異，預期也會越來越明顯。換句話說，提供越完整的設計文件，AI 越能產生符合設計者預期的程式碼。
